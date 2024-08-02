@@ -7,7 +7,7 @@ fi
 
 
 # ======= Neovim Setup ========
-apt install -y fuse git unzip make gcc xclip ripgrep
+apt install -y libfuse2 git unzip make gcc xclip ripgrep
 wget https://github.com/neovim/neovim/releases/download/v0.10.1/nvim.appimage
 mv nvim.appimage /usr/local/bin/nvim
 chmod 755 /usr/local/bin/nvim
@@ -17,4 +17,4 @@ chown -R $SUDO_USER:$SUDO_USER /home/$SUDO_USER/.config/nvim
 grep -qxF 'alias vim="nvim"' /home/$SUDO_USER/.bashrc || echo 'alias vim="nvim"' >> /home/$SUDO_USER/.bashrc
 
 
-apt install -y libfuse2 curl nautilus 
+apt install -y curl nautilus 
