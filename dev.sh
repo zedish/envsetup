@@ -7,42 +7,56 @@ fi
 
 
 # =======  Setup ========
-apt install -y build-essential pip libusb-1.0-0-dev 
+apt install -y build-essential pip libusb-dev libusb-1.0-0-dev  
 
-curl -L -o code.deb 'https://code.visualstudio.com/sha/download?build=stable&os=linux-deb-x64'
-sudo apt install ./code.deb
-rm -f code.deb
-
-wget -O arduino.zip https://downloads.arduino.cc/arduino-ide/arduino-ide_2.3.2_Linux_64bit.zip?_gl=1*s72ek3*_ga*Njk5MzEzNjE1LjE3MjI2MzQ3MTg.*_ga_NEXN8H46L5*MTcyMjYzNDcxNy4xLjAuMTcyMjYzNDcyMi4wLjAuMTkwMDUwMzkwNw..*_fplc*blBTbjhZSml0TGpvM05sdlR1TzJrUFQlMkI4NFhjNEV4eFhVektGU29wdDJCaGUlMkZBNGVmS0Z6aWN4S1BkU2o4c1BOaTMzblE3aGdCOENDdlRSRUZ4Q0kwSU81amc3bEJtTGxWMGw0QkdhaDZmVWdsWVdZME8zZG5FRGpidDN3QSUzRCUzRA..*_gcl_au*Njg1MTY1MzY5LjE3MjI2MzQ3MjI.
-unzip arduino.zip -d -o /usr/local/bin
-mv -f /usr/local/bin/arduino-ide* /usr/local/bin/arduino
-
-chown root:root /usr/local/bin/arduino/chrome-sandbox
-chmod 4755 /usr/local/bin/arduino/chrome-sandbox
-
-arduinoPath="/usr/local/bin/arduino"
-if ! grep -q "$arduinoPath" /etc/environment; then
-    sudo sh -c "echo 'PATH=\"$(grep -oP 'PATH=\"\K[^\"]*' /etc/environment):$arduinoPath\"' > /etc/environment"
-    echo "Updated /etc/environment with new PATH: $arduinoPath"
-else
-    echo "Path $arduinoPath is already in /etc/environment"
+# ======= VSCODE Setup ========
+#curl -L -o code.deb 'https://code.visualstudio.com/sha/download?build=stable&os=linux-deb-x64'
+#sudo apt install ./code.deb
+#rm -f code.deb
+snap install code --classic
+su $SUDO_USER -c "code --install-extension ms-python.python
+code --install-extension ms-vscode.cpptools
+code --install-extension ms-vscode-remote.remote-ssh
+code --install-extension ms-vscode-remote.remote-ssh-edit
+code --install-extension ms-vscode.remote-explorer"
+exit
+# ======= Arduino Setup ========
+if ! [ -f /home/$SUDO_USER/.local/share/applications/arduino.desktop ]; then
+  wget -nc -P /home/$SUDO_USER/.local/bin https://downloads.arduino.cc/arduino-ide/arduino-ide_2.3.2_Linux_64bit.AppImage
+  chmod u+x /home/$SUDO_USER/.local/bin/arduino-ide_2.3.2_Linux_64bit.AppImage
+  chown $SUDO_USER:$SUDO_USER /home/$SUDO_USER/.local/bin/arduino-ide_2.3.2_Linux_64bit.AppImage
+  /home/$SUDO_USER/.local/bin/arduino-ide_2.3.2_Linux_64bit.AppImage --appimage-extract
+  mv squashfs-root/resources/app/resources/icons/512x512.png /home/$SUDO_USER/.local/share/icons/arduino-ide.png
+  rm -rf squashfs-root
+  echo "
+[Desktop Entry]
+Name=Arduino IDE
+Exec=/home/$SUDO_USER/.local/bin/arduino-ide_2.3.2_Linux_64bit.AppImage --no-sandbox %U
+Terminal=false
+Type=Application
+Icon=/home/$SUDO_USER/.local/share/icons/arduino-ide.png
+StartupWMClass=Arduino IDE
+X-AppImage-Version=2.3.2
+Comment=Arduino IDE
+Categories=Development;
+" > /home/$SUDO_USER/.local/share/applications/arduino.desktop
+chmod 555 /home/$SUDO_USER/.local/share/applications/arduino.desktop
+chown $SUDO_USER:$SUDO_USER /home/$SUDO_USER/.local/share/applications/arduino.desktop
 fi
 
-echo '
-[Desktop Entry]
-Version=1.0
-Name=Arduino IDE
-Comment=Write code and flash to Arduino hardware
-GenericName=Embedded electronics IDE
-Keywords=Programming;Development
-Exec=/usr/local/bin/arduino/arduino-ide
-Terminal=false
-X-MultipleArgs=false
-Type=Application
-Icon=/usr/local/bin/arduino/resources/app/resources/icons/512x512.png
-MimeType=text/x-arduino;
-StartupNotify=true
-' > /home/$SUDO_USER/.local/share/applications/arduino.desktop
-chmod 555 /home/$SUDO_USER/.local/share/applications/arduino.desktop
+# ======= Serial Setup ========
+apt install minicom picoterm putty -y
+snap install tio --classic
 
-rm arduino.zip
+
+# ======= Language setup ========
+# rust
+if command -v rustup >&2; then
+  echo "rustup already installed"
+else
+  su $SUDO_USER -c "curl --proto '=https' --tlsv1.2 https://sh.rustup.rs -ssf | sh -s -- -y"
+  sed -i '/-- rust_analyzer/s/-- //' /home/$SUDO_USER/.config/nvim/init.lua
+
+fi
+
+
