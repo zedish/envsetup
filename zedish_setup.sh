@@ -1,5 +1,10 @@
 #!/bin/bash
 
+if [ "$EUID" -ne 0 ]; then
+    sudo "$0" "$@"
+    exit
+fi
+
 # Define the options for the checklist
 options=(
     "Basic" "Run Script 1" on 
@@ -22,23 +27,23 @@ if [ $? -ne 0 ]; then
     exit 1
 fi
 
-chmod 777 basic.sh
-chmod 777 dev.sh
-chmod 777 security.sh
 chmod 777 electronics.sh
-
+chmod 777 coms.sh
+chmod -R 777 basic_scripts
+chmod -R 777 dev_scripts
+chmod -R 777 security_scripts
 #for option in ${selected_array[@]}; do
 for option in $(echo "$selected" | sed 's/"//g' | tr -d '\n'); do
     echo "Installing $option..."
     case $option in
         "Basic")
-            ./basic.sh
+            ./basic_scripts/basic.sh
             ;;
         "Dev")
-            ./dev.sh
+            ./dev_scripts/dev.sh
             ;;
         "Security")
-            ./security.sh
+            ./security_scripts/security.sh
             ;;
         "Electronics")
             ./electronics.sh
