@@ -37,6 +37,10 @@ if ! grep 'eval "$(register-python-argcomplete pipx)"' /home/$SUDO_USER/.bashrc 
   echo 'eval "$(register-python-argcomplete pipx)"' >> /home/$SUDO_USER/.bashrc
 fi
 
+# ======= Auto start ssh agent ========
+if ! grep 'eval "$(ssh-agent -s)"' /home/$SUDO_USER/.bashrc >&2; then
+  echo 'eval "$(ssh-agent -s)"' >> /home/$SUDO_USER/.bashrc
+fi
 
 mkdir -p /home/$SUDO_USER/.local/share/icons
 
